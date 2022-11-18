@@ -1,135 +1,169 @@
-#source https://www.edureka.co/blog/snake-game-with-pygame/
-#Task:
-# Demonstrate your knowledge of Python by modifying a small simple game, “Hungry Snake”, where you need to demonstrate your knowledge of
-# python syntax, use of 3 different data types, conditionals, loop, functions. Well commented and organised code will receive higher marks.
-# Procedural or object-oriented approach to programming is appreciated. Modifications can include input from the  user, adding different levels
-# with increasing difficulty, more snakes on screen, snakes with changing colours. Use your creativity!
-#
-# The code examples should be pushed to a private git repository.
 
 import pygame
-import time
-import random
+from random import randint
 
 pygame.init()
 
-white = (255, 255, 255)
-yellow = (255, 255, 102)
-black = (0, 0, 0)
-red = (213, 50, 80)
+width = 1000
+height = 700
+win = pygame.display.set_mode((width, height))
+
+pygame.display.set_caption('Pygame')
+
+# Colors
+
+red = (255, 0, 0)
 green = (0, 255, 0)
-blue = (50, 153, 213)
-
-dis_width = 600
-dis_height = 400
-
-dis = pygame.display.set_mode((dis_width, dis_height))
-pygame.display.set_caption('Snake Game by Edureka')
-
-clock = pygame.time.Clock()
-
-snake_block = 10
-snake_speed = 15
-
-font_style = pygame.font.SysFont("bahnschrift", 25)
-score_font = pygame.font.SysFont("comicsansms", 35)
+purple = (255, 0, 255)
+black = (0, 0, 0)
 
 
-def Your_score(score):
-    value = score_font.render("Your Score: " + str(score), True, yellow)
-    dis.blit(value, [0, 0])
+# Object Classes
+
+class Snake(pygame.sprite.Sprite):
+    def __init__(self):
+        pygame.sprite.Sprite.__init__(self)
+        self.image = pygame.Surface([25, 25])
+        self.image.fill(black)
+        self.rect = self.image.get_rect()
+        self.score = 0
+        self.highScore = 0
+        self.speed = 10
+        self.dx = 0
+        self.dy = 0
 
 
-def our_snake(snake_block, snake_list):
-    for x in snake_list:
-        pygame.draw.rect(dis, black, [x[0], x[1], snake_block, snake_block])
+class Food(pygame.sprite.Sprite):
+    def __init__(self):
+        pygame.sprite.Sprite.__init__(self)
+        self.image = pygame.Surface([10, 10])
+        self.image.fill(red)
+        self.rect = self.image.get_rect()
+
+    def move(self):
+        food.rect.x = randint(50, width - 50)
+        food.rect.y = randint(50, height - 50)
 
 
-def message(msg, color):
-    mesg = font_style.render(msg, True, color)
-    dis.blit(mesg, [dis_width / 6, dis_height / 3])
+class Bomb(pygame.sprite.Sprite):
+    def __init__(self):
+        pygame.sprite.Sprite.__init__(self)
+        self.image = pygame.Surface([18, 18])
+        self.image.fill(purple)
+        self.rect = self.image.get_rect()
 
 
-def gameLoop():
-    game_over = False
-    game_close = False
+# Where to draw objects
+snake = Snake()
+snake.rect.x = width // 2
+snake.rect.y = height // 2
 
-    x1 = dis_width / 2
-    y1 = dis_height / 2
+food = Food()
+food.rect.x = randint(50, width - 50)
+food.rect.y = randint(50, height - 50)
 
-    x1_change = 0
-    y1_change = 0
+# Sprite groups
+sprites_group = pygame.sprite.Group()
+sprites_group.add(snake)
+sprites_group.add(food)
 
-    snake_List = []
-    Length_of_snake = 1
-
-    foodx = round(random.randrange(0, dis_width - snake_block) / 10.0) * 10.0
-    foody = round(random.randrange(0, dis_height - snake_block) / 10.0) * 10.0
-
-    while not game_over:
-
-        while game_close == True:
-            dis.fill(blue)
-            message("You Lost! Press C-Play Again or Q-Quit", red)
-            Your_score(Length_of_snake - 1)
-            pygame.display.update()
-
-            for event in pygame.event.get():
-                if event.type == pygame.KEYDOWN:
-                    if event.key == pygame.K_q:
-                        game_over = True
-                        game_close = False
-                    if event.key == pygame.K_c:
-                        gameLoop()
-
-        for event in pygame.event.get():
-            if event.type == pygame.QUIT:
-                game_over = True
-            if event.type == pygame.KEYDOWN:
-                if event.key == pygame.K_LEFT:
-                    x1_change = -snake_block
-                    y1_change = 0
-                elif event.key == pygame.K_RIGHT:
-                    x1_change = snake_block
-                    y1_change = 0
-                elif event.key == pygame.K_UP:
-                    y1_change = -snake_block
-                    x1_change = 0
-                elif event.key == pygame.K_DOWN:
-                    y1_change = snake_block
-                    x1_change = 0
-
-        if x1 >= dis_width or x1 < 0 or y1 >= dis_height or y1 < 0:
-            game_close = True
-        x1 += x1_change
-        y1 += y1_change
-        dis.fill(blue)
-        pygame.draw.rect(dis, green, [foodx, foody, snake_block, snake_block])
-        snake_Head = []
-        snake_Head.append(x1)
-        snake_Head.append(y1)
-        snake_List.append(snake_Head)
-        if len(snake_List) > Length_of_snake:
-            del snake_List[0]
-
-        for x in snake_List[:-1]:
-            if x == snake_Head:
-                game_close = True
-
-        our_snake(snake_block, snake_List)
-        Your_score(Length_of_snake - 1)
-
-        pygame.display.update()
-
-        if x1 == foodx and y1 == foody:
-            foodx = round(random.randrange(0, dis_width - snake_block) / 10.0) * 10.0
-            foody = round(random.randrange(0, dis_height - snake_block) / 10.0) * 10.0
-            Length_of_snake += 1
-
-        clock.tick(snake_speed)
-
-    pygame.quit()
-    quit()
+bomb_group = pygame.sprite.Group()
 
 
-gameLoop()
+def redraw():
+    if playing:
+        win.fill(green)
+
+        # Score Text
+        font = pygame.font.SysFont('Time New Roman', 24)
+        score = font.render('SCORE: ' + str(snake.score), False, black)
+        scoreRect = score.get_rect()
+        scoreRect.center = (width // 2, 50)
+        win.blit(score, scoreRect)
+
+        # Draw Sprite Groups
+        sprites_group.update()
+        sprites_group.draw(win)
+        bomb_group.update()
+        bomb_group.draw(win)
+    else:
+        win.fill(black)
+
+        font = pygame.font.SysFont('Time New Roman', 60)
+        # Title Text
+        title = font.render('SNAKE', False, green)
+        titleRect = title.get_rect()
+        titleRect.center = (width // 2, 100)
+        win.blit(title, titleRect)
+
+        # High Score Text
+        high = font.render('High Score: ' + str(snake.highScore), False, purple)
+        highRect = high.get_rect()
+        highRect.center = (width // 2, height // 2)
+        win.blit(high, highRect)
+
+        # Start Text
+        start = font.render('Press Space to Start', False, ((randint(0, 255), randint(0, 255), randint(0, 255))))
+        startRect = start.get_rect()
+        startRect.center = (width // 2, height - 50)
+        win.blit(start, startRect)
+
+    pygame.display.update()
+
+
+running = True
+playing = False
+
+while running:
+
+    pygame.time.delay(60)
+
+    for event in pygame.event.get():
+        if event.type == pygame.QUIT:
+            running = False
+
+    if playing:
+        snake.rect.x += snake.dx
+        snake.rect.y += snake.dy
+
+        # Movement Controls
+        key = pygame.key.get_pressed()
+        if key[pygame.K_LEFT]:
+            snake.dx = -snake.speed
+            snake.dy = 0
+        if key[pygame.K_RIGHT]:
+            snake.dx = snake.speed
+            snake.dy = 0
+        if key[pygame.K_UP]:
+            snake.dx = 0
+            snake.dy = -snake.speed
+        if key[pygame.K_DOWN]:
+            snake.dx = 0
+            snake.dy = snake.speed
+
+        # Collision
+        if snake.rect.colliderect(food.rect):
+            food.move()
+            bomb = Bomb()
+            bomb.rect.x = snake.rect.x + 50
+            bomb.rect.y = snake.rect.y + 50
+            bomb_group.add(bomb)
+            snake.score += 1
+
+        for bomb in bomb_group:
+            if bomb.rect.colliderect(snake.rect):
+                if snake.score > snake.highScore:
+                    snake.highScore = snake.score
+                playing = False
+
+    else:
+        key = pygame.key.get_pressed()
+        if key[pygame.K_SPACE]:
+            playing = True
+            snake.rect.x = width // 2
+            snake.rect.y = height // 2
+            snake.score = 0
+            bomb_group.empty()
+    redraw()
+
+pygame.quit()
